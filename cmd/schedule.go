@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -61,12 +62,18 @@ type table_data struct {
 
 var t *widgets.Table = widgets.NewTable()
 
-var raceCmd = &cobra.Command{
+var year string
+
+var scheduleCmd = &cobra.Command{
 	Use:   "sch",
 	Short: "Get race schedule for a season",
 	Long:  "This command fetches the schedule for a given year",
 	Run: func(cmd *cobra.Command, args []string) {
-		data := getData()
+		if year < "1950" {
+			fmt.Println("Invalid year")
+			return
+		}
+		data := getData(args)
 		if err := ui.Init(); err != nil {
 			log.Fatalf("failed to initialize termui: %v", err)
 		}
@@ -117,12 +124,13 @@ var raceCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(raceCmd)
+	scheduleCmd.Flags().StringVarP(&year, "year", "y", "", "Schedule of the given year")
+	rootCmd.AddCommand(scheduleCmd)
 }
 
-func getData() response {
+func getData(args []string) response {
 	data_in_response := response{}
-	resp, err := http.Get("https://ergast.com/api/f1/2020.json")
+	resp, err := http.Get(fmt.Sprintf("https://ergast.com/api/f1/%s.json", year))
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -6,7 +6,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var scheduleCmd = &cobra.Command{
+var round string
+
+var raceCmd = &cobra.Command{
 	Use:   "race",
 	Short: "Get race data",
 	Long:  "This command fetches the data for a given race",
@@ -72,5 +74,6 @@ var scheduleCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(scheduleCmd)
+	raceCmd.Flags().StringVarP(&round, "round", "r", "", "Finishing order based on the given round number")
+	rootCmd.AddCommand(raceCmd)
 }
