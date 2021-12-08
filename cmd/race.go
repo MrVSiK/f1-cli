@@ -1,77 +1,76 @@
 package cmd
 
 import (
-	"encoding/json"
-	"io"
-	"log"
-	"net/http"
-
+	ui "github.com/gizak/termui/v3"
+	"github.com/gizak/termui/v3/widgets"
 	"github.com/spf13/cobra"
 )
 
-type race struct {
-	Season   string `json:"season"`
-	Round    string `json:"round"`
-	Url      string `json:"url"`
-	RaceName string `json:"raceName"`
-	Circuit  struct {
-		CircuitId   string `json:"circuitId"`
-		Url         string `json:"url"`
-		CircuitName string `json:"circuitName"`
-		Location    struct {
-			Lat      string `json:"lat"`
-			Long     string `json:"long"`
-			Locality string `json:"locality"`
-			Country  string `json:"country"`
-		} `json:"Location"`
-	} `json:"Circuit"`
-	Date string `json:"date"`
-	Time string `json:"time"`
-}
-
-type table struct {
-	Season string `json:"season"`
-	Races  []race `json:"Races"`
-}
-
-type data struct {
-	Xmlns     string `json:"xmlns"`
-	Series    string `json:"series"`
-	Url       string `json:"url"`
-	Limit     string `json:"limit"`
-	Offset    string `json:"offset"`
-	Total     string `json:"total"`
-	RaceTable table  `json:"RaceTable"`
-}
-
-type response struct {
-	MRData data `json:"MRData"`
-}
-
-var raceCmd = &cobra.Command{
+var scheduleCmd = &cobra.Command{
 	Use:   "race",
-	Short: "Get race statistics",
-	Long:  "This command fetches data about the given race",
+	Short: "Get race data",
+	Long:  "This command fetches the data for a given race",
 	Run: func(cmd *cobra.Command, args []string) {
-		data := getData()
+		l := widgets.NewList()
+		l.Title = "List"
+		l.Rows = []string{
+			"[0] github.com/gizak/termui/v3",
+			"[1] [你好，世界](fg:blue)",
+			"[2] [こんにちは世界](fg:red)",
+			"[3] [color](fg:white,bg:green) output",
+			"[4] output.go",
+			"[5] random_out.go",
+			"[6] dashboard.go",
+			"[7] foo",
+			"[8] bar",
+			"[9] baz",
+		}
+		l.TextStyle = ui.NewStyle(ui.ColorYellow)
+		l.WrapText = false
+		l.SetRect(0, 0, 25, 8)
+
+		ui.Render(l)
+
+		previousKey := ""
+		uiEvents := ui.PollEvents()
+		for {
+			e := <-uiEvents
+			switch e.ID {
+			case "q", "<C-c>":
+				return
+			case "j", "<Down>":
+				l.ScrollDown()
+			case "k", "<Up>":
+				l.ScrollUp()
+			case "<C-d>":
+				l.ScrollHalfPageDown()
+			case "<C-u>":
+				l.ScrollHalfPageUp()
+			case "<C-f>":
+				l.ScrollPageDown()
+			case "<C-b>":
+				l.ScrollPageUp()
+			case "g":
+				if previousKey == "g" {
+					l.ScrollTop()
+				}
+			case "<Home>":
+				l.ScrollTop()
+			case "G", "<End>":
+				l.ScrollBottom()
+			}
+
+			if previousKey == "g" {
+				previousKey = ""
+			} else {
+				previousKey = e.ID
+			}
+
+			ui.Render(l)
+		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(raceCmd)
-}
-
-func getData() response {
-	data_in_response := response{}
-	resp, err := http.Get("https://ergast.com/api/f1/2020.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	json.Unmarshal(body, &data_in_response)
-	return data_in_response
+	rootCmd.AddCommand(scheduleCmd)
 }

@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	configFile string
-	rootCmd    = &cobra.Command{
+	// configFile string
+	rootCmd = &cobra.Command{
 		Use:   "f1",
 		Short: "f1-cli is a fast and efficient way to keep up with the Formula 1 events.",
 		Long:  "f1-cli is a fast and efficient way to keep up with the Formula 1 events.",
