@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
@@ -130,6 +132,17 @@ func init() {
 
 func getData(args []string) response {
 	data_in_response := response{}
+	_, err := os.Stat(fmt.Sprintf("cache/sch/%s.json", year))
+	if err == nil {
+		file, err := os.Open(fmt.Sprintf("cache/sch/%s.json", year))
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		byteValue, _ := ioutil.ReadAll(file)
+		json.Unmarshal(byteValue, &data_in_response)
+		return data_in_response
+	}
 	resp, err := http.Get(fmt.Sprintf("https://ergast.com/api/f1/%s.json", year))
 	if err != nil {
 		log.Fatal(err)
@@ -140,6 +153,7 @@ func getData(args []string) response {
 		log.Fatal(err)
 	}
 	json.Unmarshal(body, &data_in_response)
+	go cache_data(data_in_response)
 	return data_in_response
 }
 
@@ -173,4 +187,12 @@ func createDetails(data *table_data) *widgets.Table {
 	arr[5] = []string{"Time:", data.time}
 	t.Rows = arr
 	return t
+}
+
+func cache_data(data response) {
+	file, _ := json.MarshalIndent(data, "", " ")
+
+	if err := ioutil.WriteFile(fmt.Sprintf("cache/sch/%s.json", year), file, 0644); err != nil {
+		log.Fatal(err)
+	}
 }
