@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"f1-cli/util"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,45 +14,6 @@ import (
 	"github.com/gizak/termui/v3/widgets"
 	"github.com/spf13/cobra"
 )
-
-type race struct {
-	Season   string `json:"season"`
-	Round    string `json:"round"`
-	Url      string `json:"url"`
-	RaceName string `json:"raceName"`
-	Circuit  struct {
-		CircuitId   string `json:"circuitId"`
-		Url         string `json:"url"`
-		CircuitName string `json:"circuitName"`
-		Location    struct {
-			Lat      string `json:"lat"`
-			Long     string `json:"long"`
-			Locality string `json:"locality"`
-			Country  string `json:"country"`
-		} `json:"Location"`
-	} `json:"Circuit"`
-	Date string `json:"date"`
-	Time string `json:"time"`
-}
-
-type table struct {
-	Season string `json:"season"`
-	Races  []race `json:"Races"`
-}
-
-type data struct {
-	Xmlns     string `json:"xmlns"`
-	Series    string `json:"series"`
-	Url       string `json:"url"`
-	Limit     string `json:"limit"`
-	Offset    string `json:"offset"`
-	Total     string `json:"total"`
-	RaceTable table  `json:"RaceTable"`
-}
-
-type response struct {
-	MRData data `json:"MRData"`
-}
 
 type table_data struct {
 	name        string
@@ -75,7 +37,7 @@ var scheduleCmd = &cobra.Command{
 			fmt.Println("Invalid year")
 			return
 		}
-		data := getData(args)
+		data := get_schedule(args)
 		if err := ui.Init(); err != nil {
 			log.Fatalf("failed to initialize termui: %v", err)
 		}
@@ -130,8 +92,8 @@ func init() {
 	rootCmd.AddCommand(scheduleCmd)
 }
 
-func getData(args []string) response {
-	data_in_response := response{}
+func get_schedule(args []string) util.Response {
+	data_in_response := util.Response{}
 	_, err := os.Stat(fmt.Sprintf("cache/sch/%s.json", year))
 	if err == nil {
 		file, err := os.Open(fmt.Sprintf("cache/sch/%s.json", year))
@@ -157,7 +119,7 @@ func getData(args []string) response {
 	return data_in_response
 }
 
-func writeData(data []race) []string {
+func writeData(data []util.Race) []string {
 	size := len(data)
 	arr := make([]string, size)
 	for i := 0; i < size; i++ {
@@ -166,7 +128,7 @@ func writeData(data []race) []string {
 	return arr
 }
 
-func getDetails(data []race, current int) *table_data {
+func getDetails(data []util.Race, current int) *table_data {
 	return &table_data{
 		name:        data[current].RaceName,
 		circuitName: data[current].Circuit.CircuitName,
@@ -189,7 +151,7 @@ func createDetails(data *table_data) *widgets.Table {
 	return t
 }
 
-func cache_data(data response) {
+func cache_data(data util.Response) {
 	file, _ := json.MarshalIndent(data, "", " ")
 
 	if err := ioutil.WriteFile(fmt.Sprintf("cache/sch/%s.json", year), file, 0644); err != nil {
