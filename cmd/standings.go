@@ -11,10 +11,13 @@ import (
 	"os"
 
 	ui "github.com/gizak/termui/v3"
+	"github.com/gizak/termui/v3/widgets"
 	"github.com/spf13/cobra"
 )
 
 var constructor string
+
+// var l *widgets.List = widgets.NewList()
 
 var standingCmd = &cobra.Command{
 	Use:   "std",
@@ -29,7 +32,71 @@ var standingCmd = &cobra.Command{
 			log.Fatalf("failed to initialize termui: %v", err)
 		}
 		defer ui.Close()
-		fmt.Println("Standing")
+		if constructor != "" {
+			table := set_constructors(get_constructor_standings(args))
+			footer := widgets.NewParagraph()
+			footer.Text = "Press q to quit\nPress j to scroll down\nPress k to scroll up"
+			footer.Title = "Keys"
+			footer.SetRect(5, 5, 40, 15)
+			footer.BorderStyle.Fg = ui.ColorYellow
+			grid1 := ui.NewGrid()
+			termwidth1, termheight1 := ui.TerminalDimensions()
+			grid1.SetRect(0, 0, termwidth1, termheight1)
+			grid1.Set(ui.NewRow(0.75, ui.NewCol(1.0, table)), ui.NewRow(0.25, ui.NewCol(1.0, footer)))
+			ui.Render(grid1)
+			uiEvents := ui.PollEvents()
+			for {
+				select {
+				case e := <-uiEvents:
+					switch e.ID {
+					case "q", "<C-c>":
+						return
+					case "<Resize>":
+						payload := e.Payload.(ui.Resize)
+						grid1.SetRect(0, 0, payload.Width, payload.Height)
+						ui.Clear()
+						ui.Render(grid1)
+					}
+				}
+			}
+		} else {
+			l := set_drivers(get_drivers_standings(args))
+			footer := widgets.NewParagraph()
+			footer.Text = "Press q to quit"
+			footer.Title = "Keys"
+			footer.SetRect(5, 5, 40, 15)
+			footer.BorderStyle.Fg = ui.ColorYellow
+			grid1 := ui.NewGrid()
+			termwidth1, termheight1 := ui.TerminalDimensions()
+			grid1.SetRect(0, 0, termwidth1, termheight1)
+			grid1.Set(ui.NewRow(0.75, ui.NewCol(1.0, l)), ui.NewRow(0.25, ui.NewCol(1.0, footer)))
+			ui.Render(grid1)
+			uiEvents := ui.PollEvents()
+			for {
+				select {
+				case e := <-uiEvents:
+					switch e.ID {
+					case "q", "<C-c>":
+						return
+					case "<Resize>":
+						payload := e.Payload.(ui.Resize)
+						grid1.SetRect(0, 0, payload.Width, payload.Height)
+						ui.Clear()
+						ui.Render(grid1)
+					case "j", "<Down>":
+						l.ScrollDown()
+						grid1.Set(ui.NewRow(0.75, ui.NewCol(1.0, set_drivers(get_drivers_standings(args)))), ui.NewRow(0.25, ui.NewCol(1.0, footer)))
+						ui.Clear()
+						ui.Render(grid1)
+					case "k", "<Up>":
+						l.ScrollUp()
+						grid1.Set(ui.NewRow(0.75, ui.NewCol(1.0, set_drivers(get_drivers_standings(args)))), ui.NewRow(0.25, ui.NewCol(1.0, footer)))
+						ui.Clear()
+						ui.Render(grid1)
+					}
+				}
+			}
+		}
 	},
 }
 
@@ -174,4 +241,29 @@ func cache_constructor_data(data util.Response) {
 	if err := ioutil.WriteFile(fmt.Sprintf("cache/cons/%s_%s.json", year, round), file, 0644); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func set_drivers(response util.Response) *widgets.List {
+	list1 := widgets.NewList()
+	length := len(response.MRData.StandingsTable.StandingsLists[0].DriverStandings)
+	arr1 := make([]string, length+1)
+	arr1[0] = "Position    Name    Constructor    Points"
+	for i := 0; i < length; i++ {
+		name := fmt.Sprintf("%s %s", response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Driver.GivenName, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Driver.FamilyName)
+		arr1[i+1] = fmt.Sprintf("%s    %s    %s    %s", response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Position, name, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Constructors.Name, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Points)
+	}
+	list1.Rows = arr1
+	return list1
+}
+
+func set_constructors(response util.Response) *widgets.Table {
+	table := widgets.NewTable()
+	length := len(response.MRData.StandingsTable.StandingsLists[0].ConstructorStandings)
+	arr1 := make([][]string, length+1)
+	arr1[0] = []string{"Position", "Name", "Points"}
+	for i := 0; i < length; i++ {
+		arr1[i+1] = []string{response.MRData.StandingsTable.StandingsLists[0].ConstructorStandings[i].Position, response.MRData.StandingsTable.StandingsLists[0].ConstructorStandings[i].Constructor.Name, response.MRData.StandingsTable.StandingsLists[0].ConstructorStandings[i].Points}
+	}
+	table.Rows = arr1
+	return table
 }
