@@ -39,14 +39,24 @@ type Table struct {
 	Races  []Race `json:"Races"`
 }
 
+type stdList struct {
+	DriverStandings []Details `json:"DriverStandings"`
+}
+
+type Standing struct {
+	Season         string    `json:"season"`
+	StandingsLists []stdList `json:"StandingsLists"`
+}
+
 type Data struct {
-	Xmlns     string `json:"xmlns"`
-	Series    string `json:"series"`
-	Url       string `json:"url"`
-	Limit     string `json:"limit"`
-	Offset    string `json:"offset"`
-	Total     string `json:"total"`
-	RaceTable Table  `json:"RaceTable"`
+	Xmlns          string   `json:"xmlns"`
+	Series         string   `json:"series"`
+	Url            string   `json:"url"`
+	Limit          string   `json:"limit"`
+	Offset         string   `json:"offset"`
+	Total          string   `json:"total"`
+	RaceTable      Table    `json:"RaceTable"`
+	StandingsTable Standing `json:"StandingsTable"`
 }
 
 type Response struct {

@@ -17,7 +17,7 @@ import (
 
 var round string
 
-// var year string
+// var name string
 
 var raceCmd = &cobra.Command{
 	Use:   "race",
@@ -28,9 +28,20 @@ var raceCmd = &cobra.Command{
 			fmt.Println("Invalid Round number")
 			return
 		}
-		table1, table2 := set_race(get_race(args))
+		if year < "1950" {
+			fmt.Println("Invalid year")
+			return
+		}
+		if err := ui.Init(); err != nil {
+			log.Fatalf("failed to initialize termui: %v", err)
+		}
+		defer ui.Close()
+		data := get_race(args)
+		fmt.Println("Get Data")
+		table1, table2 := set_race(data)
+		fmt.Println("Set Data")
 		footer := widgets.NewParagraph()
-		footer.Text = "Press q to quit\nPress j to scroll down\nPress k to scroll up"
+		footer.Text = "Press q to quit"
 		footer.Title = "Keys"
 		footer.SetRect(5, 5, 40, 15)
 		footer.BorderStyle.Fg = ui.ColorYellow
