@@ -35,7 +35,7 @@ var standingCmd = &cobra.Command{
 		if constructor != "" {
 			table := set_constructors(get_constructor_standings(args))
 			footer := widgets.NewParagraph()
-			footer.Text = "Press q to quit\nPress j to scroll down\nPress k to scroll up"
+			footer.Text = "Press q to quit"
 			footer.Title = "Keys"
 			footer.SetRect(5, 5, 40, 15)
 			footer.BorderStyle.Fg = ui.ColorYellow
@@ -60,7 +60,7 @@ var standingCmd = &cobra.Command{
 				}
 			}
 		} else {
-			l := set_drivers(get_drivers_standings(args))
+			table1, table2 := set_drivers(get_drivers_standings(args))
 			footer := widgets.NewParagraph()
 			footer.Text = "Press q to quit"
 			footer.Title = "Keys"
@@ -69,7 +69,7 @@ var standingCmd = &cobra.Command{
 			grid1 := ui.NewGrid()
 			termwidth1, termheight1 := ui.TerminalDimensions()
 			grid1.SetRect(0, 0, termwidth1, termheight1)
-			grid1.Set(ui.NewRow(0.75, ui.NewCol(1.0, l)), ui.NewRow(0.25, ui.NewCol(1.0, footer)))
+			grid1.Set(ui.NewRow(0.75, ui.NewCol(0.5, table1), ui.NewCol(0.5, table2)), ui.NewRow(0.25, ui.NewCol(1.0, footer)))
 			ui.Render(grid1)
 			uiEvents := ui.PollEvents()
 			for {
@@ -81,16 +81,6 @@ var standingCmd = &cobra.Command{
 					case "<Resize>":
 						payload := e.Payload.(ui.Resize)
 						grid1.SetRect(0, 0, payload.Width, payload.Height)
-						ui.Clear()
-						ui.Render(grid1)
-					case "j", "<Down>":
-						l.ScrollDown()
-						grid1.Set(ui.NewRow(0.75, ui.NewCol(1.0, set_drivers(get_drivers_standings(args)))), ui.NewRow(0.25, ui.NewCol(1.0, footer)))
-						ui.Clear()
-						ui.Render(grid1)
-					case "k", "<Up>":
-						l.ScrollUp()
-						grid1.Set(ui.NewRow(0.75, ui.NewCol(1.0, set_drivers(get_drivers_standings(args)))), ui.NewRow(0.25, ui.NewCol(1.0, footer)))
 						ui.Clear()
 						ui.Render(grid1)
 					}
@@ -243,17 +233,27 @@ func cache_constructor_data(data util.Response) {
 	}
 }
 
-func set_drivers(response util.Response) *widgets.List {
-	list1 := widgets.NewList()
+func set_drivers(response util.Response) (*widgets.Table, *widgets.Table) {
+	table1 := widgets.NewTable()
+	table2 := widgets.NewTable()
 	length := len(response.MRData.StandingsTable.StandingsLists[0].DriverStandings)
-	arr1 := make([]string, length+1)
-	arr1[0] = "Position    Name    Constructor    Points"
-	for i := 0; i < length; i++ {
+	first := length / 2
+	second := length - first
+	arr1 := make([][]string, first+1)
+	arr2 := make([][]string, second+1)
+	arr1[0] = []string{"Position", "Name", "Constructor", "Points"}
+	arr2[0] = []string{"Position", "Name", "Constructor", "Points"}
+	for i := 0; i < first; i++ {
 		name := fmt.Sprintf("%s %s", response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Driver.GivenName, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Driver.FamilyName)
-		arr1[i+1] = fmt.Sprintf("%s    %s    %s    %s", response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Position, name, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Constructors.Name, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Points)
+		arr1[i+1] = []string{response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Position, name, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Constructors[0].Name, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Points}
 	}
-	list1.Rows = arr1
-	return list1
+	for i := first; i < length; i++ {
+		name := fmt.Sprintf("%s %s", response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Driver.GivenName, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Driver.FamilyName)
+		arr2[i+1-first] = []string{response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Position, name, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Constructors[0].Name, response.MRData.StandingsTable.StandingsLists[0].DriverStandings[i].Points}
+	}
+	table1.Rows = arr1
+	table2.Rows = arr2
+	return table1, table2
 }
 
 func set_constructors(response util.Response) *widgets.Table {

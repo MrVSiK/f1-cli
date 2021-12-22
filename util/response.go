@@ -11,7 +11,7 @@ type Details struct {
 	Constructor struct {
 		Name string `json:"name"`
 	} `json:"Constructor"`
-	Constructors struct {
+	Constructors []struct {
 		Name string `json:"name"`
 	} `json:"Constructors"`
 }
