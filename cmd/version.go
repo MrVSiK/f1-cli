@@ -11,7 +11,7 @@ var versionCmd = &cobra.Command{
 	Short: "Print version number of f1 tool",
 	Long:  "This command can be used get the version number of f1 tool",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("deployer v0.9-alpha")
+		fmt.Println("deployer v1.0.0")
 	},
 }
 
