@@ -33,7 +33,7 @@ then
 
   echo "Installation Successful"
   echo "Add the following line to ~/.bashrc or ~/.bash_profile"
-  echo "PATH=\"$PATH:$HOME/.f1/bin\""
+  echo "PATH=\"\$PATH:\$HOME/.f1/bin\""
 
   #Cleaning up
   rm -r $TMP_DIR
