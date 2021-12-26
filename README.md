@@ -6,6 +6,16 @@ A command line interface to keep up with Formula 1 race events. Made using [Cobr
 - Display standings, race details and Formula 1 schedule
 - Automatic caching to boost data retrieval speeds
 
+## Requirements
+- [Go](https://go.dev/)
+- [Wget](https://www.gnu.org/software/wget/)
+
+## Installation
+Copy and paste the following command in your terminal
+```
+
+```
+
 ## Commands
 | Command | Flags | Description |
 | --- | --- | --- |
