@@ -13,7 +13,7 @@ A command line interface to keep up with Formula 1 race events. Made using [Cobr
 ## Installation
 Copy and paste the following command in your terminal
 ```
-
+wget -O - https://raw.githubusercontent.com/MrVSiK/f1-cli/main/install.sh | bash
 ```
 
 ## Commands
